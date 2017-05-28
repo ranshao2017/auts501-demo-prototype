@@ -1,0 +1,178 @@
+apply plugin: 'com.android.application'
+apply plugin: 'bugly'
+apply from: '../config/quality.gradle'
+apply plugin: 'im.fir.plugin.gradle'
+
+def final BUGLY_APPID = "cf87ccc1e3"
+def final BUGLY_APPKEY = "ccf442e8-f13a-4050-bf16-01a09c06ee4e"
+def final UMENG_APPKEY = "58f866e71061d2068800153e"
+def final UMENG_MESSAGE_SECRET = "b5fea76365a55e03d6839f245ed0bafd"
+def appChannel = System.getenv('app_channel') as String ?: "clean assemble";
+
+//此处配置用于上传符号表
+bugly {
+    appId = BUGLY_APPID
+    appKey = BUGLY_APPKEY
+    //是否上传符号表，由Jenkins构建时作为参数传入
+    uploadMapping = appChannel.contains("upload") && appChannel.contains("SymtabFile")
+    println appChannel
+}
+
+//fir上传
+fir{
+    apiToken '632601290d61eeefa6524d5f1a4583d7'
+    changeLog 'Gradle-fir插件自动上传'
+}
+
+android {
+    def final APK_NAME_PRODUCT = "Prototype";
+    def final BASE_VERSION_NAME = "1.0.0"
+    def final VERSION_CODE = 1
+
+    def env = System.getenv()
+    def isBuildFromJenkins = env['BUILD_NUMBER'] as Integer ? true : false
+    def yybNumber = env['QA_NUMBER'] as Integer ?: 0
+    def buildNumber = env['BUILD_NUMBER'] as Integer ?: 0
+    def keystorePath = env['ANDROID_KEYSTORE_PATH'] as String ? env['ANDROID_KEYSTORE_PATH'] : '/keystore/not/exist';
+
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+    defaultConfig {
+        applicationId "com.phicomm.prototype"
+        minSdkVersion 16
+        //非充分理由，不能随意修改targetSdkVersion
+        targetSdkVersion 22
+        versionName BASE_VERSION_NAME
+        versionCode isBuildFromJenkins ? VERSION_CODE : 1
+
+        buildConfigField "String", "MARKET_URL", "\"https://mall.phicomm.com/?channel_type=android&agentid=Njg3OQ==\""
+        buildConfigField "String", "COMMUNITY_URL", "\"http://www.phiwifi.cn/forum.php?mod=guide&view=hot&mobile=2\""
+        buildConfigField "boolean", "IS_IN_PRODUCTION_ENVIRONMENT", "true"
+        buildConfigField "boolean", "SUPPORT_BAICHUANG", "false"
+
+        ndk {
+            abiFilters "armeabi", "x86", "mips"
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file(keystorePath)
+            storePassword System.getenv("ANDROID_KEYSTORE_STORE_PW")
+            keyAlias "d:/yfkey.keystore"
+            keyPassword System.getenv("ANDROID_KEYSTORE_ALIAS_PW")
+        }
+        release {
+            storeFile file(keystorePath)
+            storePassword System.getenv("ANDROID_KEYSTORE_STORE_PW")
+            keyAlias "d:/yfkey.keystore"
+            keyPassword System.getenv("ANDROID_KEYSTORE_ALIAS_PW")
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "isDebug", "true"
+            // Bugly
+            manifestPlaceholders = [BUGLY_ENABLE_DEBUG  : "true",
+                                    BUGLY_APPID         : BUGLY_APPID,
+                                    UMENG_CHANNEL       : name,
+                                    UMENG_APPKEY        : UMENG_APPKEY,
+                                    UMENG_MESSAGE_SECRET: UMENG_MESSAGE_SECRET]
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "isDebug", "true"
+            // Bugly
+            manifestPlaceholders = [BUGLY_ENABLE_DEBUG  : "false",
+                                    BUGLY_APPID         : BUGLY_APPID,
+                                    UMENG_CHANNEL       : name,
+                                    UMENG_APPKEY        : UMENG_APPKEY,
+                                    UMENG_MESSAGE_SECRET: UMENG_MESSAGE_SECRET]
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(output.outputFile.parentFile,
+                    output.outputFile.name.replace("app-",
+                            APK_NAME_PRODUCT + "-" + "${variant.versionName}-"));
+        }
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
+    lintOptions {
+        abortOnError true
+    }
+
+    productFlavors {
+        yyb {
+            versionName BASE_VERSION_NAME + "." + yybNumber + "." + buildNumber
+        }
+
+        productFlavors.all { flavor ->
+            println '******* Bugly Crash Report *******'
+            println flavor.name
+            // 设置渠道: Umeng Bugly
+            flavor.manifestPlaceholders = [BUGLY_APPID         : BUGLY_APPID,
+                                           BUGLY_APP_CHANNEL   : name,
+                                           UMENG_CHANNEL       : name,
+                                           UMENG_APPKEY        : UMENG_APPKEY,
+                                           UMENG_MESSAGE_SECRET: UMENG_MESSAGE_SECRET]
+        }
+
+    }
+
+    lintOptions {
+        abortOnError true
+    }
+
+    testOptions {
+        unitTests {
+            all {
+                jvmArgs '-noverify'
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile project(':pushsdk')
+    compile 'com.android.support:appcompat-v7:23.3.0'
+    compile 'com.android.support:recyclerview-v7:23.3.0'
+    compile 'com.jakewharton:butterknife:8.4.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
+    compile 'com.alibaba:fastjson:1.2.31'
+    compile 'com.squareup.okhttp3:okhttp:3.6.0'
+    compile 'com.squareup.okio:okio:1.11.0'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'org.xutils:xutils:3.5.0'
+    compile(name: 'phirazor', ext: 'aar')
+    compile 'com.umeng.analytics:analytics:latest.integration'
+    compile 'com.tencent.bugly:crashreport:latest.release'
+    compile 'com.tencent.mars:mars-core:1.1.4'
+    //unit test
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.7.22'
+    testCompile 'org.robolectric:robolectric:3.3.2'
+
+}
+
+

@@ -1,0 +1,14 @@
+file=D:\Work\Prototype\2\Android-Prototype\app\build\outputs\mapping\yyb\release\mapping.txt
+sha1=178c2fc3654b50c1542da3ca5e4f321728956d03
+appId=cf87ccc1e3
+appChannel=yyb
+appPackage=com.phicomm.prototype
+appVersion=1.0.0.0.0
+
+file=D:\Work\Prototype\3\Android-Prototype\app\build\outputs\mapping\yyb\release\mapping.txt
+sha1=750708730fbad9a4f87bfcedfcb3025b74d5c244
+appId=cf87ccc1e3
+appChannel=yyb
+appPackage=com.phicomm.prototype
+appVersion=1.0.0.0.0
+

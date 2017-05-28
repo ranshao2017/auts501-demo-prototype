@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/include_common_header" />
+
+    <TextView
+        android:id="@+id/tv_wifi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@color/white"
+        android:padding="15dp"
+        android:text="@string/wifi_setting"
+        android:textSize="18sp" />
+
+    <include layout="@layout/include_common_line" />
+
+    <TextView
+        android:id="@+id/tv_check_update"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:padding="15dp"
+        android:text="@string/app_check_update"
+        android:textSize="18sp" />
+
+    <include layout="@layout/include_common_line" />
+
+    <TextView
+        android:id="@+id/tv_test_crash"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:padding="15dp"
+        android:text="@string/text_crash"
+        android:textSize="18sp" />
+
+    <include layout="@layout/include_common_line" />
+
+    <TextView
+        android:id="@+id/tv_login_out"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:padding="15dp"
+        android:text="@string/logout"
+        android:textSize="18sp" />
+
+    <include layout="@layout/include_common_line" />
+
+</LinearLayout>
+
